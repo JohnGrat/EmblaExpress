@@ -41,12 +41,6 @@ async function resolvePromise(url) {
     async function downloadFiles() {
       const state = {
         Telephonebook: { file_name: "EexpressTelephonebook.json", sysid: null, dataResponse: null, promise: null },
-        Partillecomputers: { file_name: "EexpressPartillecomputers.json", sysid: null, dataResponse: null, promise: null },
-        Lerumcomputers: { file_name: "EexpressLerumcomputers.json", sysid: null, dataResponse: null, promise: null },
-        Bräckecomputers: { file_name: "EexpressBräckecomputers.json", sysid: null, dataResponse: null, promise: null },
-        Greencarriercomputers: { file_name: "EexpressGreencarriercomputers.json", sysid: null, dataResponse: null, promise: null },
-        Upplandsbrocomputers: { file_name: "EexpressUpplandsbrocomputers.json", sysid: null, dataResponse: null, promise: null },
-        Sidacomputers: { file_name: "EexpressSidacomputers.json", sysid: null, dataResponse: null, promise: null }
       }
        const json = await resolvePromise('/api/now/table/sys_attachment?&sysparm_display_value=true&sysparm_fields=sys_updated_on,file_name,sys_id&sysparm_query=file_nameLIKEEexpress');
        Object.keys(state).forEach

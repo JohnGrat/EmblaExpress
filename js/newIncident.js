@@ -13,7 +13,6 @@ var show_incidents = document.querySelectorAll('[id^=show_incidents_]')[0];
 
 //#region new incident
 let computerPattern = /(Datornamn:)(.*)([\r\n]Plats:)/;
-let specialPattern = /086985000|0302521000|0317921000/;
 let numberPattern = /(Telefonnummer:)(.*)([\r\n]+Problembeskrivning:)/;
 let url = new URL(window.document.location); 
 let params = new URLSearchParams(url.search.slice(1));
@@ -35,7 +34,6 @@ function pageLoad(number) {
 
     telephonenumber_box.value = number;
     description_box.value = description_box.value.replace(numberPattern, `$1 ${number || ""}$3`);
-    if (specialPattern.test(number)) description_box.value = description_box.value.replace(numberPattern, `$1 ${"växel"}$3`);
 
     if (number.length > 7) {
 
