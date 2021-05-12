@@ -1,68 +1,74 @@
-var port = null;
-var computername = null;
+var eexpressTelephonebook = [];
+var eexpressComputers = [];
+var lastUpdateTime = Date.parse("2020-12-18T07:39:24.704Z");
 
-connect()
+//Setup listener from page
+chrome.runtime.onMessageExternal.addListener(
+  function (request, sender, sendResponse) {
 
+      let response;
 
-//Setup tab script
-chrome.tabs.onUpdated.addListener(function(tabid, changeInfo, tab) {
-  // make sure the status is 'complete' and it's the right tab
-  if (tab.url.indexOf('https://embla.nordlo.com/incident.do?sys_id=-1&sysparm_template=IncidentDefaults&CallerID') != -1 && changeInfo.status == 'complete' ) {
-    chrome.tabs.executeScript( {
-        file: 'js/tab.js' 
-    });
-  }
-});
-    
+      switch (request.type) {
+          
+        case "INFO":
 
+          eexpressTelephonebook = request.users;
+          eexpressComputers = request.computers;
+          lastUpdateTime = Date.parse(request.timestamp);
+          console.log("Files updated")
 
-//Setup listener from tab
-chrome.runtime.onMessage.addListener(
-function(request, sender, sendResponse) {
-      (sender.tab ?
-              "from a content script:" + sender.tab.url :
-              "from the extension");
-  if (request.username.length > 1 && request.organization.length > 1){
-    sendNativeMessage(request)  
-    setTimeout(function() {
-      sendResponse({farewell: computername});
-    }, 250);
+          break;
 
-    return true;
-  }
-});
+        case "TIME":
 
-function connect() {
-  var hostName = "com.google.chrome.example.echo";
-  //alert("Connecting to native messaging host <b>" + hostName + "</b>");
-  port = chrome.runtime.connectNative(hostName);
-  port.onMessage.addListener(onNativeMessage);
-  port.onDisconnect.addListener(onDisconnected);
-}
+          response = lastUpdateTime;
+          sendResponse({ response });
+              
+          break;
 
-function onNativeMessage(message) {
-  //alert("Received message: <b>" + JSON.stringify(message) + "</b>");
-  computername = (JSON.stringify(message.Datornamn)).replace(/"/g, '');
-};
+        case "NUMBER":
+        
+          //New incident open
+         
+          response = searchIncidentDatabase(request.callingnumber)
+          sendResponse({ response });
 
- 
+          break;
+        case "USERNAME":
+           
+           //Dynamic Update Computername
 
-function onDisconnected() {
-  //alert("Failed to connect: " + chrome.runtime.lastError.message);
-  port = null;
-}
+          response = searchComputerDatabase(request.employeenumber)
+          sendResponse({ response });
 
-function sendNativeMessage(data) {
-  message = {"username": data.username, "company": data.organization};
-  //alert(JSON.stringify(message));
-  port.postMessage(message);
-  //alert("Sent message: <b>" + JSON.stringify(message) + "</b>");
-}
-
-    
-    
-    
+          break;
       
+        default:
+          break;
+      }
+      
+      
+  });
+
+
+  function searchIncidentDatabase(callingnumber) {
+
+    let formattedNumber = callingnumber.replace(/^(00\d\d|0)(\d+)/, "$2")
+    
+    if(!eexpressTelephonebook.some(x => x.telephone_number.includes(formattedNumber))) return;
+
+    var matches = eexpressTelephonebook.filter(x => x.telephone_number.includes(formattedNumber));
+    let incident = matches.reduce((a , b) => a.number > b.number ? a : b);
+    
+    return {"incident" : incident}
+  }
+  
+  function searchComputerDatabase(username) {
+    let matches = eexpressComputers.filter(x => x.Username.toLowerCase() == username.toLowerCase());
+    let computer = matches.slice(-1)[0] || {};
+    return {"computer" : computer};
+  }
+
 
 
 

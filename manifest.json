@@ -1,23 +1,41 @@
 {
     "manifest_version": 2,
-    "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcBHwzDvyBQ6bDppkIs9MP4ksKqCMyXQ/A52JivHZKh4YO/9vJsT3oaYhSpDCE9RPocOEQvwsHsFReW2nUEc6OLLyoCFFxIb7KkLGsmfakkut/fFdNJYh0xOTbSN8YvLWcqph09XAY2Y/f0AL7vfO1cuCqtkMt8hFrBGWxDdf9CQIDAQAB",
     "name": "EmblaExpress",
-    "version": "1.0",
+    "version": "2.5",
     "description": "Integration application for servicenow.",
     "background": {
         "persistent": true,
         "scripts": ["js/extension.js"]
       },
-    "permissions": [
-         "nativeMessaging",
-         "contextMenus",
-         "tabs",
-         "activeTab",
-         "https://embla.nordlo.com/incident.do?sys_id=-1&sysparm_template=IncidentDefaults"
-       ],
     "icons": {
          "16": "icons/icon16x16.png",
          "48": "icons/icon48x48.png",
          "128": "icons/icon128x128.png"
-         }       
+         },
+         "content_scripts": [
+          {
+              "matches": [
+                  "https://*.service-now.com/*"
+              ],
+              "exclude_matches": [
+                "https://signon.service-now.com/*",
+                "https://*.service-now.com/*XML=*"
+            ],
+              "js": [
+                  "js/tab.js"
+              ],
+              "all_frames": true
+          }
+          
+      ],
+      "web_accessible_resources": [
+        "js/download.js",
+        "js/newIncident.js",
+        "js/paste.js"
+    ],
+    "externally_connectable": {
+        "matches": [
+          "https://*.service-now.com/*"
+        ]
+      }        
 }
