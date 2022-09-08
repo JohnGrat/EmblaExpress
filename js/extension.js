@@ -1,39 +1,4 @@
-exchange = [{
-  "number": "INC9999994",
-  "company": "604cb3608876de403b5963da505ff497",
-  "caller_id": "",
-  "u_phone_number": "0515717200"
-},
-{
-  "number": "INC9999995",
-  "company": "604cb3608876de403b5963da505ff497",
-  "caller_id": "",
-  "u_phone_number": "0511700100"
-},
-{
-  "number": "INC9999996",
-  "company": "b494ab03db158c10c9ac5bd05b9619f3",
-  "caller_id": "",
-  "u_phone_number": "084051000"
-},
-{
-  "number": "INC9999997",
-  "company": "b494ab03db158c10c9ac5bd05b9619f3",
-  "caller_id": "",
-  "u_phone_number": "086985000"
-},
-{
-  "number": "INC9999998",
-  "company": "",
-  "caller_id": "",
-  "u_phone_number": "0302521000"
-},
-{
-  "number": "INC9999999",
-  "company": "2fd5c97df9ff82003b59f6cf5cd81bd6",
-  "caller_id": "",
-  "u_phone_number": "0317921000"
-}]
+exchange = []
 
 const zeroPad = (num, places) => String(num).padStart(places, '0')
 const groupBy = (items, key) => items.reduce(
