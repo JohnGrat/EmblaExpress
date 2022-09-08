@@ -1,41 +1,51 @@
 {
-    "manifest_version": 2,
-    "name": "EmblaExpress",
-    "version": "2.5",
-    "description": "Integration application for servicenow.",
-    "background": {
-        "persistent": true,
-        "scripts": ["js/extension.js"]
-      },
-    "icons": {
-         "16": "icons/icon16x16.png",
-         "48": "icons/icon48x48.png",
-         "128": "icons/icon128x128.png"
-         },
-         "content_scripts": [
-          {
-              "matches": [
-                  "https://*.service-now.com/*"
-              ],
-              "exclude_matches": [
-                "https://signon.service-now.com/*",
-                "https://*.service-now.com/*XML=*"
-            ],
-              "js": [
-                  "js/tab.js"
-              ],
-              "all_frames": true
-          }
-          
+  "manifest_version": 3,
+  "name": "EmblaExpress",
+  "version": "2.6",
+  "description": "Integration application for servicenow.",
+  "background": {
+    "service_worker": "js/extension.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+    "16": "icons/icon16x16.png",
+    "48": "icons/icon48x48.png",
+    "128": "icons/icon128x128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.service-now.com/*"
       ],
-      "web_accessible_resources": [
+      "exclude_matches": [
+        "https://signon.service-now.com/*",
+        "https://*.service-now.com/*XML=*",
+        "https://*.service-now.com/auth_redirect*"
+      ],
+      "js": [
+        "js/tab.js"
+      ],
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
         "js/download.js",
         "js/newIncident.js",
         "js/paste.js"
-    ],
-    "externally_connectable": {
-        "matches": [
-          "https://*.service-now.com/*"
-        ]
-      }        
+      ],
+      "matches": [
+        "https://*.service-now.com/*"
+      ],
+      "extension_ids": []
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://*.service-now.com/*"
+    ]
+  }
 }

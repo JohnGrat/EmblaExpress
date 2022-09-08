@@ -1,74 +1,200 @@
-var eexpressTelephonebook = [];
-var eexpressComputers = [];
-var lastUpdateTime = Date.parse("2020-12-18T07:39:24.704Z");
+exchange = [{
+  "number": "INC9999994",
+  "company": "604cb3608876de403b5963da505ff497",
+  "caller_id": "",
+  "u_phone_number": "0515717200"
+},
+{
+  "number": "INC9999995",
+  "company": "604cb3608876de403b5963da505ff497",
+  "caller_id": "",
+  "u_phone_number": "0511700100"
+},
+{
+  "number": "INC9999996",
+  "company": "b494ab03db158c10c9ac5bd05b9619f3",
+  "caller_id": "",
+  "u_phone_number": "084051000"
+},
+{
+  "number": "INC9999997",
+  "company": "b494ab03db158c10c9ac5bd05b9619f3",
+  "caller_id": "",
+  "u_phone_number": "086985000"
+},
+{
+  "number": "INC9999998",
+  "company": "",
+  "caller_id": "",
+  "u_phone_number": "0302521000"
+},
+{
+  "number": "INC9999999",
+  "company": "2fd5c97df9ff82003b59f6cf5cd81bd6",
+  "caller_id": "",
+  "u_phone_number": "0317921000"
+}]
+
+const zeroPad = (num, places) => String(num).padStart(places, '0')
+const groupBy = (items, key) => items.reduce(
+  (result, item) => ({
+    ...result,
+    [item[key]]: [
+      ...(result[item[key]] || []),
+      item,
+    ],
+  }),
+  {},
+);
+const getObjectFromLocalStorage = async function (key) {
+  return new Promise((resolve, reject) => {
+    try {
+      chrome.storage.local.get(key, function (value) {
+        resolve(value[key]);
+      });
+    } catch (ex) {
+      reject(ex);
+    }
+  });
+};
+const saveObjectInLocalStorage = async function (obj) {
+  return new Promise((resolve, reject) => {
+    try {
+      chrome.storage.local.set(obj, function () {
+        resolve();
+      });
+    } catch (ex) {
+      reject(ex);
+    }
+  });
+};
+
+
+chrome.runtime.onInstalled.addListener(async function (details) {
+  await saveObjectInLocalStorage({ 'telephonebook': exchange });
+  await saveObjectInLocalStorage({ 'incOffset': 0 });
+  await saveObjectInLocalStorage({ 'usrsOffset': 0 });
+  await saveObjectInLocalStorage({ 'time': "2020-12-18T07:39:24.704Z" });
+});
+
 
 //Setup listener from page
 chrome.runtime.onMessageExternal.addListener(
-  function (request, sender, sendResponse) {
+  async function (request, sender, sendResponse) {
 
-      let response;
+    let response = null;
 
-      switch (request.type) {
-          
-        case "INFO":
+    switch (request.type) {
 
-          eexpressTelephonebook = request.users;
-          eexpressComputers = request.computers;
-          lastUpdateTime = Date.parse(request.timestamp);
-          console.log("Files updated")
+      case "TIME":
 
-          break;
+        lastUpdateTime = new Date(await getObjectFromLocalStorage('time'));
+        incOffset = await getObjectFromLocalStorage('incOffset')
+        usrsOffset = await getObjectFromLocalStorage('usrsOffset')
 
-        case "TIME":
+        response = [lastUpdateTime, usrsOffset, incOffset];
+        sendResponse({ response });
 
-          response = lastUpdateTime;
-          sendResponse({ response });
-              
-          break;
 
-        case "NUMBER":
-        
-          //New incident open
-         
-          response = searchIncidentDatabase(request.callingnumber)
-          sendResponse({ response });
+        break;
+      case "DOWNLOAD":
 
-          break;
-        case "USERNAME":
-           
-           //Dynamic Update Computername
+        await saveObjectInLocalStorage({ 'time': new Date().toString() });
 
-          response = searchComputerDatabase(request.employeenumber)
-          sendResponse({ response });
+        break;
 
-          break;
-      
-        default:
-          break;
-      }
-      
-      
+      case "DATA":
+
+        await CreateEexpressTelephonebook(request.data);
+        console.log("Files updated")
+
+        break;
+      case "NUMBER":
+
+        //New incident open
+
+        response = await SearchEexpressTelephonebook(request.callingnumber)
+        sendResponse({ response });
+
+        break;
+
+      default:
+        break;
+    }
+
+
   });
 
 
-  function searchIncidentDatabase(callingnumber) {
+async function SearchEexpressTelephonebook(callingnumber) {
 
-    let formattedNumber = callingnumber.replace(/^(00\d\d|0)(\d+)/, "$2")
-    
-    if(!eexpressTelephonebook.some(x => x.telephone_number.includes(formattedNumber))) return;
+  let arr = await getObjectFromLocalStorage('telephonebook')
 
-    var matches = eexpressTelephonebook.filter(x => x.telephone_number.includes(formattedNumber));
-    let incident = matches.reduce((a , b) => a.number > b.number ? a : b);
-    
-    return {"incident" : incident}
+  let formattedNumber = callingnumber.replace(/^(00\d\d|0)(\d+)/, "$2")
+
+  if (!arr.some(x => x.u_phone_number.includes(formattedNumber))) return;
+
+  var matches = arr.filter(x => x.u_phone_number.includes(formattedNumber));
+
+  let incident = matches.reduce((a, b) => a.number > b.number ? a : b);
+
+  return { "incident": incident }
+}
+
+
+
+async function CreateEexpressTelephonebook([users, incidents]) {
+
+  let newIncOffset = await getObjectFromLocalStorage('incOffset')
+  let newUsrsOffset = await getObjectFromLocalStorage('usrsOffset')
+  let eexpressTelephonebook = await getObjectFromLocalStorage('telephonebook')
+
+  if (incidents.length > 0) {
+    incidents.forEach(item => {
+      var obj = {};
+      obj["number"] = item.number
+      obj["company"] = item.company.value;
+      obj["caller_id"] = item.caller_id.value;
+      obj["u_phone_number"] = item.u_phone_number;
+
+      if (eexpressTelephonebook.some(x => x.number == item.number)) return;
+
+      if (eexpressTelephonebook.some(x => x.u_phone_number == item.u_phone_number)) {
+        var matches = eexpressTelephonebook.filter(x => x.u_phone_number == item.u_phone_number);
+        let incident = matches.reduce((a, b) => a.number > b.number ? a : b);
+        if (incident.number < item.number) {
+          eexpressTelephonebook = eexpressTelephonebook.filter(x => x.u_phone_number != item.u_phone_number);
+          eexpressTelephonebook.push(obj)
+        }
+      } else {
+        eexpressTelephonebook.push(obj);
+      }
+      newIncOffset++;
+    })
   }
-  
-  function searchComputerDatabase(username) {
-    let matches = eexpressComputers.filter(x => x.Username.toLowerCase() == username.toLowerCase());
-    let computer = matches.slice(-1)[0] || {};
-    return {"computer" : computer};
+
+  if (users.length > 0) {
+    users.forEach(item => {
+      var obj = {};
+      obj["number"] = `INC${zeroPad(newUsrsOffset, 7)}`
+      obj["company"] = item.company.value;
+      obj["caller_id"] = item.sys_id;
+      obj["u_phone_number"] = [item.mobile_phone, item.phone, item.home_phone].map(function (x) { return x.replace(/[^0-9]/g, "") }).join("");
+
+      if (!eexpressTelephonebook.some(x => x.u_phone_number == obj.u_phone_number)) {
+        eexpressTelephonebook.push(obj);
+      }
+      newUsrsOffset++;
+    })
   }
 
+
+  await saveObjectInLocalStorage({ 'telephonebook': eexpressTelephonebook });
+  await saveObjectInLocalStorage({ 'incOffset': newIncOffset });
+  await saveObjectInLocalStorage({ 'usrsOffset': newUsrsOffset });
+
+  return;
+}
 
 
 
